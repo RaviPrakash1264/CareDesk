@@ -4,7 +4,6 @@ package com.project.caredesk.tools;
 import com.project.caredesk.entity.HelpDeskTicket;
 import com.project.caredesk.model.TicketRequest;
 import com.project.caredesk.service.HelpDeskTicketService;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -19,12 +18,18 @@ import java.util.List;
 import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
 @Component
-@RequiredArgsConstructor
 public class HelpDeskTools {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HelpDeskTools.class);
 
     private final HelpDeskTicketService service;
+    private final ChatClient webSearchChatClient;
+
+    public HelpDeskTools(HelpDeskTicketService service,
+                         @Qualifier("webSearchRAGChatClient") ChatClient webSearchChatClient) {
+        this.service = service;
+        this.webSearchChatClient = webSearchChatClient;
+    }
 
 
     @Tool(name = "createTicket", description = "Create the Support Ticket", returnDirect = true)
@@ -45,5 +50,19 @@ public class HelpDeskTools {
         LOGGER.info("Found {} tickets for user: {}", tickets.size(), username);
         // throw new RuntimeException("Unable to fetch ticket status");
         return tickets;
+    }
+
+    @Tool(name = "searchWebForITIssue",
+            description = "Search the public web for IT or software troubleshooting answers. " +
+                    "Use ONLY for IT/software questions, only after the company handbook has no " +
+                    "answer or the user is unsatisfied, and only after the user has agreed to a web search.")
+    String searchWebForITIssue(@ToolParam(description = "The IT/software question to search the web for")
+                               String query, ToolContext toolContext) {
+        String username = (String) toolContext.getContext().get("username");
+        LOGGER.info("Web RAG search for query: {} (user: {})", query, username);
+        return webSearchChatClient.prompt()
+                .advisors(a -> a.param(CONVERSATION_ID, username))
+                .user(query)
+                .call().content();
     }
 }

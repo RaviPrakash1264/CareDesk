@@ -19,8 +19,8 @@ import java.util.List;
 public class WebSearchRAGChatClientConfig {
 
     @Bean("webSearchRAGChatClient")
-    public ChatClient chatClient(ChatClient.Builder chatClientBuilder,
-            ChatMemory chatMemory, RestClient.Builder restClientBuilder) {
+    public ChatClient chatClient(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory,
+            RestClient.Builder restClientBuilder) {
         Advisor loggerAdvisor = new SimpleLoggerAdvisor();
         Advisor tokenUsageAdvisor = new TokenUsageAuditAdvisor();
         Advisor memoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
@@ -29,7 +29,7 @@ public class WebSearchRAGChatClientConfig {
                         .restClientBuilder(restClientBuilder).maxResults(5).build())
                 .build();
         return chatClientBuilder
-                .defaultAdvisors(List.of(loggerAdvisor, memoryAdvisor, tokenUsageAdvisor,
+                .defaultAdvisors(List.of(loggerAdvisor, tokenUsageAdvisor,memoryAdvisor,
                         webSearchRAGAdvisor))
                 .build();
     }

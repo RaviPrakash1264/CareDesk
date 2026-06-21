@@ -2,16 +2,18 @@ package com.project.caredesk.configuration;
 
 
 import com.project.caredesk.advisors.TokenUsageAuditAdvisor;
-import com.project.caredesk.tools.HelpDeskTools;
+import com.project.caredesk.rag.WebSearchDocumentRetriever;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
@@ -22,22 +24,17 @@ public class HelpDeskChatClientConfig {
     Resource systemPromptTemplate;
 
     @Bean("helpDeskChatClient")
-    public ChatClient chatClient(ChatClient.Builder chatClientBuilder,
-            ChatMemory chatMemory, HelpDeskTools helpDeskTools) {
+    public ChatClient chatClient(ChatClient.Builder chatClientBuilder,RetrievalAugmentationAdvisor retrievalAugmentationAdvisor, RestClient.Builder restClientBuilder) {
         Advisor loggerAdvisor = new SimpleLoggerAdvisor();
         Advisor tokenUsageAdvisor = new TokenUsageAuditAdvisor();
-        Advisor memoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
+//        Advisor memoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
+//        var webSearchRAGAdvisor = RetrievalAugmentationAdvisor.builder()
+//                .documentRetriever(WebSearchDocumentRetriever.builder()
+//                        .restClientBuilder(restClientBuilder).maxResults(5).build())
+//                .build();
         return chatClientBuilder
                 .defaultSystem(systemPromptTemplate)
-                .defaultTools(helpDeskTools)
-                .defaultAdvisors(List.of(loggerAdvisor,tokenUsageAdvisor,memoryAdvisor))
+                .defaultAdvisors(List.of(loggerAdvisor,tokenUsageAdvisor,retrievalAugmentationAdvisor))
                 .build();
     }
-
-//    @Bean
-//    ToolExecutionExceptionProcessor toolExecutionExceptionProcessor() {
-//        return new DefaultToolExecutionExceptionProcessor(true);
-//    }
-
-
 }

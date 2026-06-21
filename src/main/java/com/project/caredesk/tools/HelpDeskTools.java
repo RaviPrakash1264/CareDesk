@@ -7,12 +7,16 @@ import com.project.caredesk.service.HelpDeskTicketService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+
+import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
 @Component
 @RequiredArgsConstructor
@@ -21,6 +25,7 @@ public class HelpDeskTools {
     private static final Logger LOGGER = LoggerFactory.getLogger(HelpDeskTools.class);
 
     private final HelpDeskTicketService service;
+
 
     @Tool(name = "createTicket", description = "Create the Support Ticket", returnDirect = true)
     String createTicket(@ToolParam(description = "Details to create a Support ticket")
@@ -41,5 +46,4 @@ public class HelpDeskTools {
         // throw new RuntimeException("Unable to fetch ticket status");
         return tickets;
     }
-
 }

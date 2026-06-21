@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
@@ -35,6 +36,7 @@ public class HelpDeskTools {
     @Tool(name = "createTicket", description = "Create the Support Ticket", returnDirect = true)
     String createTicket(@ToolParam(description = "Details to create a Support ticket")
                         TicketRequest ticketRequest, ToolContext toolContext) {
+        markToolInvoked(toolContext, "createTicket");
         String username = (String) toolContext.getContext().get("username");
         LOGGER.info("Creating support ticket for user: {} with details: {}", username, ticketRequest);
         HelpDeskTicket savedTicket = service.createTicket(ticketRequest,username);
@@ -44,6 +46,7 @@ public class HelpDeskTools {
 
     @Tool(description = "Fetch the status of the tickets based on a given username")
     List<HelpDeskTicket> getTicketStatus(ToolContext toolContext) {
+        markToolInvoked(toolContext, "getTicketStatus");
         String username = (String) toolContext.getContext().get("username");
         LOGGER.info("Fetching tickets for user: {}", username);
         List<HelpDeskTicket> tickets =  service.getTicketsByUsername(username);
@@ -64,5 +67,18 @@ public class HelpDeskTools {
                 .advisors(a -> a.param(CONVERSATION_ID, username))
                 .user(query)
                 .call().content();
+    }
+
+    /**
+     * Records that a tool ran, so the controller can skip fact-checking for tool-driven
+     * responses (e.g. ticket create/status), which aren't factual claims and must not be
+     * re-executed by a retry.
+     */
+    @SuppressWarnings("unchecked")
+    private void markToolInvoked(ToolContext toolContext, String toolName) {
+        Object holder = toolContext.getContext().get("invokedTools");
+        if (holder instanceof Set<?>) {
+            ((Set<String>) holder).add(toolName);
+        }
     }
 }

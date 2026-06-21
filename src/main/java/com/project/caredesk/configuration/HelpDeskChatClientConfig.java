@@ -27,11 +27,6 @@ public class HelpDeskChatClientConfig {
     public ChatClient chatClient(ChatClient.Builder chatClientBuilder,RetrievalAugmentationAdvisor retrievalAugmentationAdvisor, RestClient.Builder restClientBuilder) {
         Advisor loggerAdvisor = new SimpleLoggerAdvisor();
         Advisor tokenUsageAdvisor = new TokenUsageAuditAdvisor();
-//        Advisor memoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
-//        var webSearchRAGAdvisor = RetrievalAugmentationAdvisor.builder()
-//                .documentRetriever(WebSearchDocumentRetriever.builder()
-//                        .restClientBuilder(restClientBuilder).maxResults(5).build())
-//                .build();
         return chatClientBuilder
                 .defaultSystem(systemPromptTemplate)
                 .defaultAdvisors(List.of(loggerAdvisor,tokenUsageAdvisor,retrievalAugmentationAdvisor))

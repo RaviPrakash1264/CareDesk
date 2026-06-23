@@ -28,23 +28,48 @@ An AI-powered employee help-desk assistant built with **Spring Boot** and **Spri
 
 ## Architecture
 
-```
-                    ┌─────────────────────┐
-   HTTP  ──────────▶│  HelpDeskController │  (fact-check + retry)
-                    └──────────┬──────────┘
-                               │
-                    ┌──────────▼──────────┐
-                    │   helpDeskChatClient│  ◀── system prompt + advisors
-                    └──────────┬──────────┘
-            ┌──────────────────┼───────────────────────┐
-            ▼                  ▼                        ▼
-   RetrievalAugmentation   HelpDeskTools         Token/Logger advisors
-   (Qdrant RAG +           - createTicket
-    PII mask + translate)  - getTicketStatus
-            │              - searchWebForITIssue ─────▶ webSearchRAGChatClient
-            ▼                                            (Tavily DocumentRetriever)
-       Qdrant vector store
-       (handbook chunks)
+```mermaid
+flowchart TB
+    user([👤 Employee])
+
+    subgraph api["🌐 API Layer"]
+        ctrl["HelpDeskController<br/><i>fact-check + Spring Retry</i>"]
+    end
+
+    subgraph core["🤖 AI Orchestration"]
+        client["helpDeskChatClient<br/><i>system prompt + advisors</i>"]
+        tools["HelpDeskTools<br/>createTicket · getTicketStatus<br/>searchWebForITIssue"]
+        rag["RAG Advisor<br/><i>translate + PII mask</i>"]
+        web["webSearchRAGChatClient<br/><i>Tavily retriever</i>"]
+    end
+
+    subgraph data["💾 Data & External"]
+        qdrant[("Qdrant<br/>handbook chunks")]
+        db[("H2<br/>tickets + memory")]
+        tavily{{"Tavily<br/>Web Search API"}}
+        openai{{"OpenAI<br/>chat + embeddings"}}
+    end
+
+    user -->|"GET /api/tools/help-desk"| ctrl
+    ctrl --> client
+    client --> rag
+    client --> tools
+    client -.->|grounded answer| ctrl
+    rag --> qdrant
+    tools --> db
+    tools -->|consent-gated| web
+    web --> tavily
+    client --> openai
+    rag --> openai
+
+    classDef apiStyle fill:#e3f2fd,stroke:#1976d2,color:#0d47a1;
+    classDef coreStyle fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
+    classDef dataStyle fill:#e8f5e9,stroke:#388e3c,color:#1b5e20;
+    classDef extStyle fill:#fff3e0,stroke:#f57c00,color:#e65100;
+    class ctrl apiStyle;
+    class client,tools,rag,web coreStyle;
+    class qdrant,db dataStyle;
+    class tavily,openai extStyle;
 ```
 
 The application exposes three configured `ChatClient` beans:

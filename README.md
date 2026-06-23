@@ -108,8 +108,8 @@ curl -H "username: jdoe" \
 ```bash
 export OPENAI_API_KEY=your_openai_key
 export TAVILY_SEARCH_API_KEY=your_tavily_key
-export DB_USERNAME=sa
-export DB_PASSWORD=
+export DB_USERNAME=your_db_username
+export DB_PASSWORD=your_db_password
 ```
 
 ### Run

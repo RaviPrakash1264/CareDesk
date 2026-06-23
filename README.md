@@ -9,7 +9,7 @@ An AI-powered employee help-desk assistant built with **Spring Boot** and **Spri
 - **Web-search fallback** — A custom `DocumentRetriever` integrates the **Tavily** search API for IT/software troubleshooting. It is consent-gated: used only after the handbook has no answer and the user agrees to a web search.
 - **Self fact-checking** — Responses are validated by an LLM-based `FactCheckingEvaluator`. Unsupported answers trigger **Spring Retry** (retry-and-recover). Side-effecting tool responses (ticket create/status) are skipped to avoid re-execution.
 - **Conversational memory** — Per-user, multi-turn context via JDBC-backed message-window chat memory.
-- **PII masking** — A document post-processor redacts emails and phone numbers from retrieved content for privacy/compliance.
+- **PII masking (data minimization)** — A document post-processor redacts emails and phone numbers from untrusted **web-search results** before they are sent to the LLM provider. The internal handbook is intentionally exempt, since its contact details are content employees are meant to receive.
 - **Multilingual queries** — A translation query transformer normalizes incoming queries to English before retrieval.
 - **Observability** — Token-usage audit advisor for cost tracking, plus Actuator, Micrometer/Prometheus metrics, Grafana dashboards, and OpenTelemetry tracing exported to Jaeger.
 
@@ -39,8 +39,8 @@ flowchart TB
     subgraph core["🤖 AI Orchestration"]
         client["helpDeskChatClient<br/><i>system prompt + advisors</i>"]
         tools["HelpDeskTools<br/>createTicket · getTicketStatus<br/>searchWebForITIssue"]
-        rag["RAG Advisor<br/><i>translate + PII mask</i>"]
-        web["webSearchRAGChatClient<br/><i>Tavily retriever</i>"]
+        rag["RAG Advisor<br/><i>translate + augment</i>"]
+        web["webSearchRAGChatClient<br/><i>Tavily retriever + PII mask</i>"]
     end
 
     subgraph data["💾 Data & External"]
@@ -75,7 +75,7 @@ flowchart TB
 The application exposes three configured `ChatClient` beans:
 
 - **`helpDeskChatClient`** — primary client with the help-desk system prompt, tools, and handbook RAG.
-- **`chatMemoryChatClient`** — RAG client with conversational memory, PII masking, and query translation.
+- **`chatMemoryChatClient`** — RAG client with conversational memory and query translation.
 - **`webSearchRAGChatClient`** — backs the web-search tool via the Tavily retriever.
 
 ## API
@@ -164,7 +164,7 @@ src/main/resources/
 ## How It Works
 
 1. A request hits `/api/tools/help-desk` with a username and message.
-2. The `helpDeskChatClient` answers, with RAG retrieving relevant handbook chunks from Qdrant (PII-masked, query translated to English).
-3. The model may invoke tools — creating a ticket, checking status, or (with user consent) searching the web via Tavily.
+2. The `helpDeskChatClient` answers, with RAG retrieving relevant handbook chunks from Qdrant (query translated to English).
+3. The model may invoke tools — creating a ticket, checking status, or (with user consent) searching the web via Tavily, whose results are PII-masked before reaching the model.
 4. For non-tool answers, the `FactCheckingEvaluator` verifies the response; if it fails, Spring Retry re-attempts up to 3 times before returning a graceful fallback message.
 5. Token usage and traces are recorded throughout for observability.

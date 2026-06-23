@@ -56,7 +56,6 @@ public class ChatMemoryChatClientConfig {
                         .targetLanguage("english").build())
                 .documentRetriever(VectorStoreDocumentRetriever.builder().vectorStore(vectorStore)
                         .topK(3).similarityThreshold(0.5).build())
-                .documentPostProcessors(PIIMaskingDocumentPostProcessor.builder())
                 .queryAugmenter(ContextualQueryAugmenter.builder()
                         .allowEmptyContext(true)
                         .promptTemplate(new PromptTemplate(hrSystemTemplate))

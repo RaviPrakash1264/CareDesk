@@ -2,6 +2,7 @@ package com.project.caredesk.configuration;
 
 
 import com.project.caredesk.advisors.TokenUsageAuditAdvisor;
+import com.project.caredesk.rag.PIIMaskingDocumentPostProcessor;
 import com.project.caredesk.rag.WebSearchDocumentRetriever;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -27,6 +28,7 @@ public class WebSearchRAGChatClientConfig {
         var webSearchRAGAdvisor = RetrievalAugmentationAdvisor.builder()
                 .documentRetriever(WebSearchDocumentRetriever.builder()
                         .restClientBuilder(restClientBuilder).maxResults(5).build())
+                .documentPostProcessors(PIIMaskingDocumentPostProcessor.builder())
                 .build();
         return chatClientBuilder
                 .defaultAdvisors(List.of(loggerAdvisor, tokenUsageAdvisor,memoryAdvisor,

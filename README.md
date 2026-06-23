@@ -161,11 +161,3 @@ src/main/resources/
 ├── schema/          chat-memory schema
 └── NexGen_Employee_Handbook_2025.pdf
 ```
-
-## How It Works
-
-1. A request hits `/api/tools/help-desk` with a username and message.
-2. The `helpDeskChatClient` answers, with RAG retrieving relevant handbook chunks from Qdrant (query translated to English).
-3. The model may invoke tools — creating a ticket, checking status, or (with user consent) searching the web via Tavily, whose results are PII-masked before reaching the model.
-4. For non-tool answers, the `FactCheckingEvaluator` verifies the response; if it fails, Spring Retry re-attempts up to 3 times before returning a graceful fallback message.
-5. Token usage and traces are recorded throughout for observability.

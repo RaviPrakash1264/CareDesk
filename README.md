@@ -99,8 +99,7 @@ curl -H "username: jdoe" \
 
 ### Prerequisites
 
-- Java 25
-- Docker & Docker Compose
+- Docker Desktop
 - An OpenAI API key and a Tavily API key
 
 ### Environment variables

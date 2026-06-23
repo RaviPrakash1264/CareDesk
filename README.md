@@ -20,6 +20,7 @@ An AI-powered employee help-desk assistant built with **Spring Boot** and **Spri
 | Language / Framework | Java 25, Spring Boot 4, Spring AI |
 | LLM | OpenAI (chat + embeddings) |
 | Vector store | Qdrant |
+| Document ingestion | Apache Tika |
 | Persistence | Spring Data JPA, H2 |
 | Web search | Tavily API |
 | Build | Maven |
